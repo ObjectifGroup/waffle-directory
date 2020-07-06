@@ -209,6 +209,7 @@
                 'id': 'state-fills',
                 'type': 'fill',
                 'source': 'states',
+                'maxzoom': 6,
                 'layout': {},
                 'paint': {
                     'fill-color': ['get', 'color'],
@@ -244,13 +245,12 @@
                 'id': 'pin',
                 'type': 'circle',
                 'source': 'pins',
-                'minzoom': 8,
+                'minzoom': 9,
                 'paint': {
                     'circle-radius': 5,
                     'circle-color': ['get', 'color'],
                     'circle-stroke-color': 'white',
                     'circle-stroke-width': 1
-
                 }
             });
 
