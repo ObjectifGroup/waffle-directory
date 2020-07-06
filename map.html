@@ -99,6 +99,8 @@
     <script>
 
         const zoomDivHelper = document.getElementById('zoomLevel');
+        let pins = []
+        let states = []
 
         var map = new mapboxgl.Map({
             container: 'map', // container id
@@ -124,6 +126,14 @@
             zoom: 3.5
         });
 
+        // mapboxgl.accessToken = 'pk.eyJ1IjoiYmVuZGVybGlkemUiLCJhIjoiY2pud3c0MnN1MDdraTN4cXBraDR3MHdyaCJ9.OsQLWGIWOutuIXCHgT8coQ';
+        // var map = new mapboxgl.Map({
+        //     container: 'map',
+        //     style: 'mapbox://styles/mapbox/dark-v10',
+        //     center: [-120, 50],
+        //     zoom: 2
+        // });
+
         map.addControl(new mapboxgl.NavigationControl());
         var hoveredStateId = null;
 
@@ -139,8 +149,8 @@
             .then(result => {
 
                 console.log('results', result);
-                const pins = result[0]
-                const states = result[1]
+                pins = result[0]
+                states = result[1]
 
                 states.features.forEach(state => {
 
@@ -152,7 +162,7 @@
                         if (pin.properties.closed === 1) {
                             pin.properties.color = 'red'
                         }
-
+                        //define if a pin is inside a polygon
                         if (turf.booleanPointInPolygon(pin, state)) {
                             state.properties.storeNumber++
                             if (pin.properties.closed === 1) {
@@ -173,9 +183,10 @@
 
                 console.log('states', states);
 
-                map.getSource("pins").setData(pins)
+                modal.style.display = "none"; // remove modal popup
                 map.getSource("states").setData(states)
-                modal.style.display = "none";
+                map.getSource("pins").setData(pins)
+
             })
 
         map.on("zoomend", () => {
@@ -233,7 +244,7 @@
                 'id': 'pin',
                 'type': 'circle',
                 'source': 'pins',
-                'minzoom': 6,
+                'minzoom': 8,
                 'paint': {
                     'circle-radius': 5,
                     'circle-color': ['get', 'color'],
@@ -242,6 +253,58 @@
 
                 }
             });
+
+            map.addLayer(
+                {
+                    'id': 'pins-heat',
+                    'type': 'heatmap',
+                    'source': 'pins',
+                    'minzoom': 5,
+                    'maxzoom': 9,
+                    'paint': {
+                        // increase intensity as zoom level increases
+                        'heatmap-intensity': {
+                            'stops': [
+                                [11, 1],
+                                [15, 3]
+                            ]
+                        },
+                        // use sequential color palette to use exponentially as the weight increases
+                        'heatmap-color': [
+                            'interpolate',
+                            ['linear'],
+                            ['heatmap-density'],
+                            0,
+                            'rgba(236,0,0,0)',
+                            0.2,
+                            'rgb(208,0,0)',
+                            0.4,
+                            'rgb(166,0,0)',
+                            0.6,
+                            'rgb(123,12,0)',
+                            0.8,
+                            'rgb(100,12,0)'
+                        ],
+                        // increase radius as zoom increases
+                        'heatmap-radius': {
+                            'stops': [
+                                [11, 15],
+                                [15, 20]
+                            ]
+                        },
+                        // decrease opacity to transition into the circle layer
+                        'heatmap-opacity': {
+                            'default': 1,
+                            'stops': [
+                                [14, 1],
+                                [15, 0]
+                            ]
+                        }
+                    },
+                    filter: ['==', ['get', 'color'], 'red']
+                },
+            );
+
 
             var popup = new mapboxgl.Popup({
                 closeButton: false,
@@ -307,11 +370,11 @@
                     coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
                 }
 
-                new mapboxgl.Popup()
+                popup
                     .setLngLat(coordinates)
                     .setHTML(`
-                    < h1 > ${ name}</h1>
-                        closed: ${ closed}
+                    <h1>${name}</h1>
+                    closed: ${ closed}
                     `)
                     .addTo(map);
             });
@@ -325,6 +388,8 @@
             map.on('mouseleave', 'pin', function () {
                 map.getCanvas().style.cursor = '';
             });
+
+            map.on('error', event => console.log("!!!",event))
         });
 
 
