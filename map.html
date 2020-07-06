@@ -7,6 +7,8 @@
     <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
     <script src="https://api.mapbox.com/mapbox-gl-js/v1.11.0/mapbox-gl.js"></script>
     <link href="https://api.mapbox.com/mapbox-gl-js/v1.11.0/mapbox-gl.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@5/turf.min.js"></script>
+
     <style>
         body {
             margin: 0;
@@ -19,11 +21,69 @@
             bottom: 0;
             width: 100%;
         }
+
+        /* The Modal (background) */
+        .modal {
+            display: none;
+            /* Hidden by default */
+            position: fixed;
+            /* Stay in place */
+            z-index: 1;
+            /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%;
+            /* Full width */
+            height: 100%;
+            /* Full height */
+            overflow: auto;
+            /* Enable scroll if needed */
+            background-color: rgb(0, 0, 0);
+            /* Fallback color */
+            background-color: rgba(0, 0, 0, 0.4);
+            /* Black w/ opacity */
+        }
+
+        /* Modal Content/Box */
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            /* 15% from the top and centered */
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            /* Could be more or less, depending on screen size */
+            text-align: center;
+        }
+
+        /* The Close Button */
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
     </style>
+
 </head>
 
 <body>
+
     <div id="map"></div>
+
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <h1>Loading data and calculating number of closed items in every state... </h1>
+        </div>
+    </div>
+
     <script>
         var map = new mapboxgl.Map({
             container: 'map', // container id
@@ -45,26 +105,73 @@
                 },
                 ]
             },
-            center: { lng: -96.38798025222115, lat: 37.533774309424146 },
-            zoom: 3.8
+            center: { lng: -91.69509679426278, lat: 45.44680704767657 },
+            zoom: 3.5
         });
 
         map.addControl(new mapboxgl.NavigationControl());
         var hoveredStateId = null;
 
+        //API Sources    
+        //https://data.waffle.directory/apple.geojson
+        //https://data.waffle.directory/wafflehouse.geojson
 
-        fetch("//serg.one/cors_api.php?query=https://data.waffle.directory/wafflehouse.geojson") // using serg.one as proxy because of CORS at data.waffle.directory
-            .then(i => i.json())
-            .then(data => {
-                console.log('data', data);
-                map.getSource("pins").setData(data)
+        Promise.all([
+            fetch("//serg.one/cors_api.php?query=https://data.waffle.directory/wafflehouse.geojson"),
+            fetch("canada-usa.json")
+        ])
+            .then(result => Promise.all(result.map(v => v.json())))
+            .then(result => {
+
+                console.log('results', result);
+                const pins = result[0]
+                const states = result[1]
+
+                states.features.forEach(state => {
+
+                    state.properties.closed = 0;
+                    state.properties.storeNumber = 0;
+                    pins.features.forEach(pin => {
+
+                        pin.properties.color = 'green';
+                        if (pin.properties.closed === 1) {
+                            pin.properties.color = 'red'
+                        }
+
+                        if (turf.booleanPointInPolygon(pin, state)) {
+                            state.properties.storeNumber++
+                            if (pin.properties.closed === 1) {
+                                state.properties.closed++;
+                            }
+                        }
+                    })
+
+                    state.properties.color = 'white'
+                    if (state.properties.closed >= 10) {
+                        state.properties.color = 'red'
+                    }
+                    if (state.properties.storeNumber > 0 && state.properties.closed < 10) {
+                        state.properties.color = 'green'
+                    }
+
+                });
+
+                console.log('states', states);
+
+                map.getSource("pins").setData(pins)
+                map.getSource("states").setData(states)
+                modal.style.display = "none";
             })
 
+
         map.on('load', function () {
+
             map.addSource('states', {
                 'type': 'geojson',
-                'data':
-                    'https://docs.mapbox.com/mapbox-gl-js/assets/us_states.geojson'
+                'data': {
+                    "type": "FeatureCollection",
+                    "features": []
+                }
             });
 
             // The feature-state dependent fill-opacity expression will render the hover effect
@@ -75,7 +182,7 @@
                 'source': 'states',
                 'layout': {},
                 'paint': {
-                    'fill-color': '#627BC1',
+                    'fill-color': ['get', 'color'],
                     'fill-opacity': [
                         'case',
                         ['boolean', ['feature-state', 'hover'], false],
@@ -117,9 +224,17 @@
                 }
             });
 
+            var popup = new mapboxgl.Popup({
+                closeButton: false,
+                closeOnClick: false
+            });
+
             // When the user moves their mouse over the state-fill layer, we'll update the
             // feature state for the feature under the mouse.
             map.on('mousemove', 'state-fills', function (e) {
+                console.log('state name ', e.features[0].properties.STATE_NAME);
+
+                const { STATE_NAME, closed, storeNumber } = e.features[0].properties;
                 if (e.features.length > 0) {
                     if (hoveredStateId) {
                         map.setFeatureState(
@@ -133,6 +248,17 @@
                         { hover: true }
                     );
                 }
+
+                var coordinates = e.lngLat;
+                var description = `
+                    <h3>${STATE_NAME}</h3>
+                    closed:${closed}<br>
+                    storeNumber: ${storeNumber}
+                `
+                popup
+                    .setLngLat(coordinates)
+                    .setHTML(description)
+                    .addTo(map);
             });
 
             // When the mouse leaves the state-fill layer, update the feature state of the
@@ -145,8 +271,52 @@
                     );
                 }
                 hoveredStateId = null;
+
+                popup.remove();
+                map.getCanvas().style.cursor = '';
+            });
+
+            //============= pins click ============================
+            map.on('click', 'pin', function (e) {
+                const coordinates = e.features[0].geometry.coordinates.slice();
+                const { name, closed } = e.features[0].properties;
+
+                // Ensure that if the map is zoomed out such that multiple
+                // copies of the feature are visible, the popup appears
+                // over the copy being pointed to.
+                while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+                    coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+                }
+
+                new mapboxgl.Popup()
+                    .setLngLat(coordinates)
+                    .setHTML(`
+                    < h1 > ${ name}</h1>
+                        closed: ${ closed}
+                    `)
+                    .addTo(map);
+            });
+
+            // Change the cursor to a pointer when the mouse is over the places layer.
+            map.on('mouseenter', 'pin', function () {
+                map.getCanvas().style.cursor = 'pointer';
+            });
+
+            // Change it back to a pointer when it leaves.
+            map.on('mouseleave', 'pin', function () {
+                map.getCanvas().style.cursor = '';
             });
         });
+
+
+        //============= modal part =======================
+        var modal = document.getElementById("myModal");
+        var span = document.getElementsByClassName("close")[0];
+        // span.onclick = function () {
+        //     modal.style.display = "none";
+        // }
+        modal.style.display = "block";
+
     </script>
 
 </body>
