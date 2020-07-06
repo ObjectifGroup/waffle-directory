@@ -70,6 +70,17 @@
             text-decoration: none;
             cursor: pointer;
         }
+
+
+        #zoomLevel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background-color: white;
+            font-size: 20px;
+            z-index: 1000;
+            padding: 5px;
+        }
     </style>
 
 </head>
@@ -77,6 +88,7 @@
 <body>
 
     <div id="map"></div>
+    <div id="zoomLevel">Zoom: </div>
 
     <div id="myModal" class="modal">
         <div class="modal-content">
@@ -85,6 +97,9 @@
     </div>
 
     <script>
+
+        const zoomDivHelper = document.getElementById('zoomLevel');
+
         var map = new mapboxgl.Map({
             container: 'map', // container id
             style: {
@@ -163,6 +178,9 @@
                 modal.style.display = "none";
             })
 
+        map.on("zoomend", () => {
+            zoomDivHelper.innerHTML = 'Zoom: ' + map.getZoom();
+        })
 
         map.on('load', function () {
 
@@ -215,9 +233,10 @@
                 'id': 'pin',
                 'type': 'circle',
                 'source': 'pins',
+                'minzoom': 6,
                 'paint': {
                     'circle-radius': 5,
-                    'circle-color': 'red',
+                    'circle-color': ['get', 'color'],
                     'circle-stroke-color': 'white',
                     'circle-stroke-width': 1
 
