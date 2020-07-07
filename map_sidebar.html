@@ -244,7 +244,7 @@
         //https://data.waffle.directory/wafflehouse.geojson
 
         Promise.all([
-            fetch("//serg.one/cors_api.php?query=https://data.waffle.directory/wafflehouse.geojson"),
+            fetch("//serg.one/cors_api.php?query=https://data.waffle.directory/apple.geojson"),
             fetch("canada-usa.json")
         ])
             .then(result => Promise.all(result.map(v => v.json())))

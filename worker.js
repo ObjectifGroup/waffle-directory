@@ -9,15 +9,17 @@ self.addEventListener('message', function (e) {
     states.forEach(state => {
         state.properties.closed = 0;
         state.properties.storeNumber = 0;
-        pins.features.forEach(pin => {
-            //define if a pin is inside a polygon
-            if (turf.booleanPointInPolygon(pin, state)) {
-                state.properties.storeNumber++
-                if (pin.properties.closed === 1) {
-                    state.properties.closed++;
+        pins.features
+            .filter(i => i.geometry.coordinates[0] && i.geometry.coordinates[1])//skip null coordinates
+            .forEach(pin => {
+                //define if a pin is inside a polygon
+                if (turf.booleanPointInPolygon(pin, state)) {
+                    state.properties.storeNumber++
+                    if (pin.properties.closed === 1) {
+                        state.properties.closed++;
+                    }
                 }
-            }
-        })
+            })
         state.properties.color = 'white'
         if (state.properties.closed >= 10) {
             state.properties.color = 'red'
