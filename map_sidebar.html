@@ -81,14 +81,76 @@
             z-index: 1000;
             padding: 5px;
         }
+
+        #openSidebar {
+            position: absolute;
+            font-size: 30px;
+            cursor: pointer;
+            z-index: 1000;
+            top:20px;
+            right:20px;
+        }
+
+        .sidenav {
+            height: 100%;
+            width: 0;
+            position: fixed;
+            z-index: 1001;
+            top: 0;
+            right: 0;
+            background-color: #111;
+            overflow-x: hidden;
+            transition: 0.5s;
+            padding-top: 60px;
+        }
+
+        .sidenav a {
+            padding: 8px 8px 8px 32px;
+            text-decoration: none;
+            font-size: 25px;
+            color: #818181;
+            display: block;
+            transition: 0.3s;
+        }
+
+        .sidenav a:hover {
+            color: #f1f1f1;
+        }
+
+        .sidenav .closebtn {
+            position: absolute;
+            top: 0;
+            right: 0;
+            font-size: 36px;
+            margin-left: 50px;
+        }
+
+        @media screen and (max-height: 450px) {
+            .sidenav {
+                padding-top: 15px;
+            }
+
+            .sidenav a {
+                font-size: 18px;
+            }
+        }
     </style>
 
 </head>
 
 <body>
 
+    <div id="mySidenav" class="sidenav">
+        <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+        <a href="#">About</a>
+        <a href="#">Services</a>
+        <a href="#">Clients</a>
+        <a href="#">Contact</a>
+    </div>
+
     <div id="map"></div>
     <div id="zoomLevel">Zoom: </div>
+    <div id="openSidebar" onclick="openNav()">&#9776; filters</div>
 
     <div id="myModal" class="modal">
         <div class="modal-content">
@@ -96,11 +158,20 @@
         </div>
     </div>
 
+
+
     <script>
 
         const zoomDivHelper = document.getElementById('zoomLevel');
         let pins = []
         let states = []
+
+        function openNav() {
+            document.getElementById("mySidenav").style.width = "250px";
+        }
+        function closeNav() {
+            document.getElementById("mySidenav").style.width = "0";
+        }
 
         var map = new mapboxgl.Map({
             container: 'map', // container id
@@ -125,14 +196,6 @@
             center: { lng: -91.69509679426278, lat: 45.44680704767657 },
             zoom: 3.5
         });
-
-        // mapboxgl.accessToken = 'pk.eyJ1IjoiYmVuZGVybGlkemUiLCJhIjoiY2pud3c0MnN1MDdraTN4cXBraDR3MHdyaCJ9.OsQLWGIWOutuIXCHgT8coQ';
-        // var map = new mapboxgl.Map({
-        //     container: 'map',
-        //     style: 'mapbox://styles/mapbox/dark-v10',
-        //     center: [-120, 50],
-        //     zoom: 2
-        // });
 
         var nav = new mapboxgl.NavigationControl();
         map.addControl(nav, 'top-left');
@@ -165,12 +228,12 @@
                             pin.properties.color = 'red'
                         }
                         //define if a pin is inside a polygon
-                        if (turf.booleanPointInPolygon(pin, state)) {
-                            state.properties.storeNumber++
-                            if (pin.properties.closed === 1) {
-                                state.properties.closed++;
-                            }
-                        }
+                        // if (turf.booleanPointInPolygon(pin, state)) {
+                        //     state.properties.storeNumber++
+                        //     if (pin.properties.closed === 1) {
+                        //         state.properties.closed++;
+                        //     }
+                        // }
                     })
 
                     state.properties.color = 'white'
@@ -391,7 +454,7 @@
                 map.getCanvas().style.cursor = '';
             });
 
-            map.on('error', event => console.log("!!!",event))
+            map.on('error', event => console.log("!!!", event))
         });
 
 
