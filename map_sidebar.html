@@ -255,13 +255,13 @@
                 states = result[1]
 
 
+
                 if (window.Worker) { //try to use worker for faster processing 
 
                     logicalProcessors = window.navigator.hardwareConcurrency;
                     console.log('logicalProcessors', logicalProcessors);
                     console.log('state', states);
                     console.log('state.length', states.features.length);
-
 
                     const chunksNumber = Math.ceil(states.features.length / logicalProcessors);
                     const chunks = [];
@@ -309,19 +309,21 @@
                     states.features.forEach(state => {
                         state.properties.closed = 0;
                         state.properties.storeNumber = 0;
-                        pins.features.forEach(pin => {
-                            pin.properties.color = 'green';
-                            if (pin.properties.closed === 1) {
-                                pin.properties.color = 'red'
-                            }
-                            //define if a pin is inside a polygon
-                            if (turf.booleanPointInPolygon(pin, state)) {
-                                state.properties.storeNumber++
+                        pins.features
+                            .filter(i => i.geometry.coordinates[0] && i.geometry.coordinates[1])//skip null coordinates
+                            .forEach(pin => {
+                                pin.properties.color = 'green';
                                 if (pin.properties.closed === 1) {
-                                    state.properties.closed++;
+                                    pin.properties.color = 'red'
                                 }
-                            }
-                        })
+                                //define if a pin is inside a polygon
+                                if (turf.booleanPointInPolygon(pin, state)) {
+                                    state.properties.storeNumber++
+                                    if (pin.properties.closed === 1) {
+                                        state.properties.closed++;
+                                    }
+                                }
+                            })
                         state.properties.color = 'white'
                         if (state.properties.closed >= 10) {
                             state.properties.color = 'red'
@@ -349,6 +351,114 @@
 
         function updateFilters(filterNames = []) {
             console.log('filterNames', filterNames);
+
+            //https://data.waffle.directory/apple.geojson
+            //https://data.waffle.directory/wafflehouse.geojson
+
+            const fetchArray = []
+            if (!states || states.features.length === 0) {
+                fetchArray.push("canada-usa.json"); //add states border if still not loaded 
+            }
+            filterNames.forEach(i => {
+                fetchArray.push(`//serg.one/cors_api.php?https://data.waffle.directory/${i}.geojson`)
+            });
+
+            console.log('fetchArray', fetchArray);
+
+            Promise.all(fetchArray)
+                .then(result => Promise.all(result.map(v => v.json())))
+                .then(result => {
+
+                    console.log('results', result);
+                    
+                    states = result[0]
+
+                    pins = result[1] //TODO join all responce to pins !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+                    if (window.Worker) { //try to use worker for faster processing 
+
+                        logicalProcessors = window.navigator.hardwareConcurrency;
+                        console.log('logicalProcessors', logicalProcessors);
+                        console.log('state', states);
+                        console.log('state.length', states.features.length);
+
+                        const chunksNumber = Math.ceil(states.features.length / logicalProcessors);
+                        const chunks = [];
+
+                        console.log('chunksNumber', chunksNumber);
+                        for (i = 0; i <= logicalProcessors; i++) {
+                            console.log('i', i);
+                            chunks.push(states.features.slice(chunksNumber * i, chunksNumber * (i + 1)));
+                        }
+
+                        console.log('chunks', chunks);
+
+                        Promise.all(
+                            chunks.map(i =>
+                                new Promise((resolve, reject) => {
+                                    const worker = new Worker('worker.js');
+                                    worker.postMessage({
+                                        chunks: i,
+                                        pins: pins
+                                    }); // Send data to our worker.
+                                    worker.addEventListener('message', event => resolve(event.data));
+                                    worker.addEventListener('error', reject);
+                                })))
+                            .then(results => {
+
+                                //all done, can display map
+                                console.log('results', results);
+                                states.features = results.flat();
+
+                                pins.features.forEach(pin => {
+                                    pin.properties.color = 'green';
+                                    if (pin.properties.closed === 1) {
+                                        pin.properties.color = 'red'
+                                    }
+                                });
+
+                                console.log('states', states);
+                                modal.style.display = "none"; // remove modal popup
+                                map.getSource("states").setData(states)
+                                map.getSource("pins").setData(pins)
+                            });
+
+                    } else {
+                        //use 1 thread 
+                        states.features.forEach(state => {
+                            state.properties.closed = 0;
+                            state.properties.storeNumber = 0;
+                            pins.features
+                                .filter(i => i.geometry.coordinates[0] && i.geometry.coordinates[1])//skip null coordinates
+                                .forEach(pin => {
+                                    pin.properties.color = 'green';
+                                    if (pin.properties.closed === 1) {
+                                        pin.properties.color = 'red'
+                                    }
+                                    //define if a pin is inside a polygon
+                                    if (turf.booleanPointInPolygon(pin, state)) {
+                                        state.properties.storeNumber++
+                                        if (pin.properties.closed === 1) {
+                                            state.properties.closed++;
+                                        }
+                                    }
+                                })
+                            state.properties.color = 'white'
+                            if (state.properties.closed >= 10) {
+                                state.properties.color = 'red'
+                            }
+                            if (state.properties.storeNumber > 0 && state.properties.closed < 10) {
+                                state.properties.color = 'green'
+                            }
+                        });
+
+                        console.log('states', states);
+                        modal.style.display = "none"; // remove modal popup
+                        map.getSource("states").setData(states)
+                        map.getSource("pins").setData(pins)
+
+                    }
+                })
         }
 
         map.on("zoomend", () => {
@@ -356,6 +466,8 @@
         })
 
         map.on('load', function () {
+
+            console.log('map load done');
 
             map.addSource('states', {
                 'type': 'geojson',
