@@ -246,7 +246,8 @@
         Promise.all([
             fetch("//serg.one/cors_api.php?query=https://data.waffle.directory/wafflehouse.geojson"),
             fetch("//serg.one/cors_api.php?query=https://data.waffle.directory/apple.geojson"),
-            fetch("canada-usa.json")
+            fetch("canada-usa.json"),
+            fetch("countries.json")
         ])
             .then(result => Promise.all(result.map(v => v.json())))
             .then(result => {
@@ -260,6 +261,7 @@
 
                 pins = turf.featureCollection([...result[0].features, ...result[1].features]) // join pins 
                 states = result[2]
+                countries = result[3]
 
                 pins.features.forEach(pin => {
                     pin.properties.color = 'green';
@@ -268,13 +270,14 @@
                     }
                 });
 
-                updateFilters(['wafflehouse','apple'])
+                updateFilters(['wafflehouse', 'apple'])
 
                 console.log('results:', pins, states);
 
                 modal.style.display = "none"; // remove modal popup
                 map.getSource("states").setData(states)
                 map.getSource("pins").setData(pins)
+                map.getSource("countries").setData(countries)
             })
 
 
@@ -329,6 +332,46 @@
         map.on('load', function () {
 
             console.log('map load done');
+
+
+            map.addSource('countries', {
+                'type': 'geojson',
+                'data': {
+                    "type": "FeatureCollection",
+                    "features": []
+                }
+            });
+
+            // The feature-state dependent fill-opacity expression will render the hover effect
+            // when a feature's hover state is set to true.
+            map.addLayer({
+                'id': 'country-fills',
+                'type': 'fill',
+                'source': 'countries',
+                'maxzoom': 6,
+                'layout': {},
+                'paint': {
+                    'fill-color': ['get', 'color'],
+                    'fill-opacity': [
+                        'case',
+                        ['boolean', ['feature-state', 'hover'], false],
+                        0.3,
+                        0.2
+                    ]
+                }
+            });
+            map.addLayer({
+                'id': 'country-borders',
+                'type': 'line',
+                'source': 'countries',
+                'layout': {},
+                'paint': {
+                    'line-color': 'red',
+                    'line-width': 1
+                }
+            });
+
+
 
             map.addSource('states', {
                 'type': 'geojson',
