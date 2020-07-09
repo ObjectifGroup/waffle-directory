@@ -196,8 +196,21 @@
     </div>
 
 
-
     <script>
+
+        const colorArray = [
+            'rgb(0, 255, 0)',
+            'rgb(0, 255, 0)',
+            'rgb(53, 251, 0)',
+            'rgb(100, 242, 0)',
+            'rgb(141, 226, 0)',
+            'rgb(176, 204, 0)',
+            'rgb(204, 176, 0)',
+            'rgb(226, 141, 0)',
+            'rgb(242, 100, 0)',
+            'rgb(251, 53, 0)',
+            'rgb(255, 0, 0)'
+        ]
 
         const zoomDivHelper = document.getElementById('zoomLevel');
         let pins = []
@@ -246,8 +259,7 @@
         Promise.all([
             fetch("//serg.one/cors_api.php?query=https://data.waffle.directory/wafflehouse.geojson"),
             fetch("//serg.one/cors_api.php?query=https://data.waffle.directory/apple.geojson"),
-            fetch("canada-usa.json"), // usa canada states only
-            fetch("countries.json") // world map 
+            fetch("joined.json"), // usa canada states only
         ])
             .then(result => Promise.all(result.map(v => v.json())))
             .then(result => {
@@ -261,7 +273,6 @@
 
                 pins = turf.featureCollection([...result[0].features, ...result[1].features]) // join pins 
                 states = result[2]
-                countries = result[3]
 
                 pins.features.forEach(pin => {
                     pin.properties.color = 'green';
@@ -270,14 +281,13 @@
                     }
                 });
 
+                console.log('results123:', pins, states);
                 updateFilters(['wafflehouse', 'apple'])
 
-                console.log('results:', pins, states);
 
                 modal.style.display = "none"; // remove modal popup
                 map.getSource("states").setData(states)
                 map.getSource("pins").setData(pins)
-                map.getSource("countries").setData(countries)
             })
 
 
@@ -303,26 +313,58 @@
                 filtered.features
                     .filter(pin => pin.geometry.coordinates[0] && pin.geometry.coordinates[1])//skip null coordinates
                     .forEach(pin => {
-                        if (state.properties.STATE_NAME.toLowerCase() === pin.state.toLowerCase()) {
+                        if (state.properties.STATE_NAME && state.properties.STATE_NAME.toLowerCase() === pin.state.toLowerCase()) {
+                            state.properties.storeNumber++
+                            if (pin.properties.closed === 1) {
+                                state.properties.closed++;
+                            }
+                        }
+                        if (state.properties.ISO && state.properties.ISO.toLowerCase() === pin.country.toLowerCase()) {
                             state.properties.storeNumber++
                             if (pin.properties.closed === 1) {
                                 state.properties.closed++;
                             }
                         }
                     })
+
+                //calculate %      
                 state.properties.color = 'white'
+                /*
                 if (state.properties.closed >= 10) {
                     state.properties.color = 'red'
                 }
                 if (state.properties.storeNumber > 0 && state.properties.closed < 10) {
                     state.properties.color = 'green'
                 }
-            })
+                */
 
+                state.properties.percent = -1; // no data in state 
+
+                if (state.properties.storeNumber > 0) {
+
+                    if (state.properties.closed > 0) {
+                        state.properties.percent = (100 * state.properties.closed) / state.properties.storeNumber
+                    } else {
+                        state.properties.percent = '0'
+                    }
+                }
+
+
+                const c = Math.ceil(state.properties.percent / 10)
+
+                console.log('state.properties.percent', state.properties.STATE_NAME, state.properties.percent, c, colorArray[c]);
+
+                if (state.properties.percent !== -1 && colorArray[c]) {
+                    state.properties.color = colorArray[c]
+                } else {
+                    state.properties.color = 'white'
+                }
+
+
+            })
 
             map.getSource("states").setData(states)
             map.getSource("pins").setData(filtered)
-
         }
 
         map.on("zoomend", () => {
@@ -332,44 +374,6 @@
         map.on('load', function () {
 
             console.log('map load done');
-            map.addSource('countries', {
-                'type': 'geojson',
-                'data': {
-                    "type": "FeatureCollection",
-                    "features": []
-                }
-            });
-
-            // The feature-state dependent fill-opacity expression will render the hover effect
-            // when a feature's hover state is set to true.
-            map.addLayer({
-                'id': 'country-fills',
-                'type': 'fill',
-                'source': 'countries',
-                'maxzoom': 6,
-                'layout': {},
-                'paint': {
-                    'fill-color': ['get', 'color'],
-                    'fill-opacity': [
-                        'case',
-                        ['boolean', ['feature-state', 'hover'], false],
-                        0.3,
-                        0.2
-                    ]
-                }
-            });
-            map.addLayer({
-                'id': 'country-borders',
-                'type': 'line',
-                'source': 'countries',
-                'layout': {},
-                'paint': {
-                    'line-color': 'red',
-                    'line-width': 1
-                }
-            });
-
-
 
             map.addSource('states', {
                 'type': 'geojson',
@@ -398,6 +402,7 @@
                 }
             });
 
+
             map.addLayer({
                 'id': 'state-borders',
                 'type': 'line',
@@ -405,7 +410,7 @@
                 'layout': {},
                 'paint': {
                     'line-color': '#627BC1',
-                    'line-width': 2
+                    'line-width': 0
                 }
             });
 
@@ -488,7 +493,7 @@
             // feature state for the feature under the mouse.
             map.on('mousemove', 'state-fills', function (e) {
                 //console.log('state name ', e.features[0].properties.STATE_NAME);
-                const { STATE_NAME, closed, storeNumber } = e.features[0].properties;
+                const { STATE_NAME, closed, storeNumber, COUNTRY } = e.features[0].properties;
                 if (e.features.length > 0) {
                     if (hoveredStateId) {
                         map.setFeatureState(
@@ -505,7 +510,7 @@
 
                 var coordinates = e.lngLat;
                 var description = `
-                    <h3>${STATE_NAME}</h3>
+                    <h3>${STATE_NAME} ${COUNTRY}</h3>
                     closed:${closed}<br>
                     storeNumber: ${storeNumber}
                 `
