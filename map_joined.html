@@ -389,7 +389,7 @@
                 'id': 'state-fills',
                 'type': 'fill',
                 'source': 'states',
-                'maxzoom': 6,
+                'maxzoom': 5.5,
                 'layout': {},
                 'paint': {
                     'fill-color': ['get', 'color'],
@@ -425,7 +425,7 @@
                 'id': 'pin',
                 'type': 'circle',
                 'source': 'pins',
-                //'minzoom': 9,
+                'minzoom': 7,
                 'paint': {
                     'circle-radius': 5,
                     'circle-color': ['get', 'color'],
@@ -438,8 +438,8 @@
                 'id': 'pins-heat',
                 'type': 'heatmap',
                 'source': 'pins',
-                'minzoom': 5,
-                'maxzoom': 9,
+                'minzoom': 5.5,
+                'maxzoom': 7,
                 'paint': {
                     // increase intensity as zoom level increases
                     'heatmap-intensity': {
@@ -467,8 +467,9 @@
                     // increase radius as zoom increases
                     'heatmap-radius': {
                         'stops': [
-                            [11, 15],
-                            [15, 20]
+                            [5.5, 45],
+                            [11, 45],
+                            [15, 30]
                         ]
                     },
                     // decrease opacity to transition into the circle layer
