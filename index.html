@@ -11,26 +11,14 @@
 
      <!-- Bootstrap CSS -->
      <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
-<link rel="apple-touch-icon" sizes="57x57" href="/icons/apple-icon-57x57.png">
-<link rel="apple-touch-icon" sizes="60x60" href="/icons/apple-icon-60x60.png">
-<link rel="apple-touch-icon" sizes="72x72" href="/icons/apple-icon-72x72.png">
-<link rel="apple-touch-icon" sizes="76x76" href="/icons/apple-icon-76x76.png">
-<link rel="apple-touch-icon" sizes="114x114" href="/icons/apple-icon-114x114.png">
-<link rel="apple-touch-icon" sizes="120x120" href="/icons/apple-icon-120x120.png">
-<link rel="apple-touch-icon" sizes="144x144" href="/icons/apple-icon-144x144.png">
-<link rel="apple-touch-icon" sizes="152x152" href="/icons/apple-icon-152x152.png">
-<link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-icon-180x180.png">
-<link rel="icon" type="image/png" sizes="192x192"  href="/icons/android-icon-192x192.png">
-<link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="96x96" href="/icons/favicon-96x96.png">
-<link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png">
-<link rel="manifest" href="/icons/manifest.json">
-<meta name="msapplication-TileColor" content="#ffffff">
-<meta name="msapplication-TileImage" content="/ms-icon-144x144.png">
-<meta name="theme-color" content="#ffffff">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+<link rel="manifest" href="icons/site.webmanifest">
 
-    <link href="https://api.mapbox.com/mapbox-gl-js/v1.11.0/mapbox-gl.css" rel="stylesheet" />
     <link href="js/style.css" rel="stylesheet" />
+
+<meta property="og:image"              content="https://the.waffle.directory/icons/fbshare.jpg" />
 
 
 </head>
@@ -38,35 +26,119 @@
 <body>
 
 	<nav class="navbar navbar-light bg-light">
+		<div>
 	  <a class="navbar-brand" href="#">
-	    <img src="logo.png"  height="30" class="d-inline-block align-top" alt="" loading="lazy">
-	 the.waffle.directory
-	  </a>
+	    <img src="logo_min.png"  height="30" class="d-inline-block align-top" alt="" loading="lazy">
+	 the.waffle.directory   </a>
+	 
+	 <div style="font-size:0.8em;"><i>COVID edition</i> - A map showing store closures <a href="#" data-toggle="modal" data-target="#infoModal"><img 
+    src="icons/info-black-18dp.svg" 
+    alt="info"
+    height="15"
+    width="15" /></a>
+	 	
+	 </div>
+ </div>
+	
+	  <div>Toggle Stores: 
+      <label for="apple" class="noselect"><input type="checkbox" class="filters" id="apple" checked> Apple</label>
+      <label for="wafflehouse" class="noselect"><input type="checkbox" class="filters " id="wafflehouse"
+              > Waffle House</label>
+		  </div>
 	</nav>
 
 
-<main style="height:80%;">
-    <div id="mySidenav" class="sidenav">
-        <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
-
-        <div class="checkboxes">
-            <label for="apple" class="noselect"><input type="checkbox" class="filters" id="apple" checked>Apple</label>
-            <label for="wafflehouse" class="noselect"><input type="checkbox" class="filters " id="wafflehouse"
-                    checked>Waffle
-                House</label>
-        </div>
-
-    </div>
+<main style="min-height:80vh;">
+  
 
     <div id="map"></div>
-    <div id="zoomLevel">Zoom: </div>
-    <div id="openSidebar" onclick="openNav()">&#9776; filters</div>
+	
+<div class="modal" tabindex="-1" role="dialog" id="loadingModal">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+	      <div class="modal-body">Loading...
+		  </div>
+	  </div>
+  </div>
+</div>
 
-    <div id="myModal" class="modal">
-        <div class="modal-content">
-            Loading...
-        </div>
+<div class="modal" tabindex="-1" role="dialog" id="infoModal">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">What is this?</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+
+			<p>It's a quick way to reference the impact of a disaster or pandemic, by looking at the closure of specific stores. Waffle House locations are notable indicators of the aftermath of a hurricane, and more recently Apple Stores are an indicator of the pandemic response.</p>
+			
+			
+			
+			
+			
+			<a class="fragment" href="https://en.wikipedia.org/wiki/Waffle_House_Index?utm_source=waffle.directory" target="_blank">
+				<div class="card">
+					<div class="row no-gutters">
+						<div class="col-auto">
+							<img data-src="/icons/closed.jpg" class="img-fluid lazy" alt="">
+						</div>
+						<div class="col">
+							<div class="card-block px-2 py-2">
+								<h4 class="card-title">The Waffle House Index</h4>
+								<p class="card-text">The Waffle House Index is an informal metric [...] used by the Federal Emergency Management Agency (FEMA) to determine the effect of a storm and the likely scale of assistance required for disaster recovery.</p>
+							</div>
+						</div>
+					</div>
+					<div class="card-footer w-100 text-muted align-left">
+						<img data-src="/icons/wiki.png" class="lazy"> Wikipedia
+					</div>
+				</div>
+			
+			
+			</a>
+			
+			
+			
+			
+			
+			<br />
+			<p>During the COVID-19 pandemic, <a href="https://twitter.com/jcenters">@jcenters</a> proposed an Apple Store Index, since Apple inherently has a monetary incentive to keep stores open, but only when it's safe.</p>
+
+			<a class="fragment" href="https://theprepared.com/blog/the-apple-store-index-says-its-not-yet-time-to-reopen-the-economy/?utm_source=waffle.directory"">
+				<div class="card">
+					<div class="row no-gutters">
+						<div class="col-auto">
+							<img data-src="/icons/appl.jpg" class="img-fluid lazy" alt="">
+						</div>
+						<div class="col">
+							<div class="card-block px-2 py-2">
+								<h4 class="card-title">The "Apple Store Index" says it's not yet time to reopen the economy</h4>
+								<p class="card-text">Apple had originally planned to keep stores closed until March 27, 2020 but they have since been closed indefinitely. [...] It’s hard to overemphasize what a drastic action this was by Apple to protect employees and customers. </p>
+							</div>
+						</div>
+					</div>
+					<div class="card-footer w-100 text-muted align-left">
+						<img data-src="/icons/prepared.png" class="lazy"> The Prepared | Apr 21 | Josh Centers
+					</div>
+				</div>
+			
+			
+			</a>
+			<br/>
+			
+			
+			
+			
+			<p>The map currently defaults to Apple Stores, but you can toggle it to include Waffle House locations. This is largely US-centric, and especially Southern US focused with Waffle House. If you have ideas for other stores that might be good indicators of disaster/pandemic impact, let us know!</p>
+			
+ </div>
     </div>
+  </div>
+</div>
+	
 
 
 </main>
@@ -76,16 +148,26 @@
     <span class="text-muted">&copy; 2020, Social Contract. No affilation with Apple, Inc., Waffle House, Inc., WH Capital. Brand names are registrated trademarks of their associated entities. </span>
   </div>
 </footer>
+    <script src="https://api.mapbox.com/mapbox-gl-js/v1.11.0/mapbox-gl.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/@turf/turf@5.1.6/turf.min.js"></script>
 
+    <link href="https://api.mapbox.com/mapbox-gl-js/v1.11.0/mapbox-gl.css" rel="stylesheet" />
+	
  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
-    <script src="https://api.mapbox.com/mapbox-gl-js/v1.11.0/mapbox-gl.js"></script>
-	<script src="https://cdn.jsdelivr.net/npm/@turf/turf@5.1.6/turf.min.js"></script>
+
 		<script src="js/site.js"></script>
     <script>
 
-      
+		$(document).ready(function(){
+		  const lazyImages = document.querySelectorAll("img.lazy");
+		  lazyImages.forEach(img => {
+		    img.src = img.dataset.src;
+		  });
+	  });
+
     </script>
+	
 </body>
 </html>

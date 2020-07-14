@@ -1,0 +1,59 @@
+main {
+	position:relative;
+}
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+        }
+
+
+        .checkboxes label {
+            display: block;
+            padding-right: 10px;
+            padding-left: 22px;
+            text-indent: -22px;
+            margin: 10px;
+            cursor: pointer;
+        }
+
+        .noselect {
+            -webkit-touch-callout: none;
+            /* iOS Safari */
+            -webkit-user-select: none;
+            /* Safari */
+            -khtml-user-select: none;
+            /* Konqueror HTML */
+            -moz-user-select: none;
+            /* Old versions of Firefox */
+            -ms-user-select: none;
+            /* Internet Explorer/Edge */
+            user-select: none;
+            /* Non-prefixed version, currently
+                                  supported by Chrome, Edge, Opera and Firefox */
+        }
+
+        .checkboxes input {
+            vertical-align: middle;
+        }
+
+        .checkboxes label span {
+            vertical-align: middle;
+        }
+		
+		.fragment {
+			font-size:0.8em;
+		    color: #555 !important;
+		    text-decoration: none !important;
+		}
+
+		.fragment .card:hover {
+		    box-shadow: 2px 2px 5px rgba(0,0,0,.2);
+
+		}
+
+		.fragment img { width:200px;}
+		.fragment .card-footer img {width:18px; vertical-align:text-bottom;}
+		.fragment .card-footer {font-size:1em;}
+		.fragment h4 {font-size:1.2em;}

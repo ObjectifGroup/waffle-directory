@@ -6,3 +6,5 @@
 .gitlab-ci.yml
 .git
 *.md
+*/.git
+*/.github
