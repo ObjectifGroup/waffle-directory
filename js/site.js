@@ -144,7 +144,7 @@
         Promise.all([
             fetch("https://data.waffle.directory/wafflehouse.geojson"),
             fetch("https://data.waffle.directory/apple.geojson"),
-            fetch("https://the.waffle.directory/joined.json"), // usa canada states only
+            fetch("https://data.waffle.directory/joined.json"), // usa canada states only
         ])
             .then(result => Promise.all(result.map(v => v.json())))
             .then(result => {
