@@ -52,8 +52,6 @@ main {
 		    box-shadow: 2px 2px 5px rgba(0,0,0,.2);
 
 		}
-
-		.fragment img { width:200px;}
 		.fragment .card-footer img {width:18px; vertical-align:text-bottom;}
 		.fragment .card-footer {font-size:1em;}
 		.fragment h4 {font-size:1.2em;}
