@@ -32,7 +32,8 @@
                    "simple-tiles": {
                        "type": "raster",
                        "tiles": ["https://a.tile.openstreetmap.org/{z}/{x}/{y}.png", "https://b.tile.openstreetmap.org/{z}/{x}/{y}.png"],
-                       "tileSize": 256
+                       "tileSize": 256,
+					   "attribution": '&copy; <a target="_top" rel="noopener" href="http://openstreetmap.org">OpenStreetMap</a> contributors'
                    },
                },
                "layers": [{
@@ -142,6 +143,7 @@
         Promise.all([
             fetch("https://data.waffle.directory/wafflehouse.geojson"),
             fetch("https://data.waffle.directory/apple.geojson"),
+			fetch("https://data.waffle.directory/timhorton.geojson"),
             fetch("https://data.waffle.directory/joined.json"), // usa canada states only
         ])
             .then(result => Promise.all(result.map(v => v.json())))
@@ -153,9 +155,13 @@
                 result[1].features.forEach(f => {
                     f.type = 'apple'
                 })
+                result[2].features.forEach(f => {
+                    f.type = 'timhorton'
+                })
+				
 
-                pins = turf.featureCollection([...result[0].features, ...result[1].features]) // join pins 
-                states = result[2]
+                pins = turf.featureCollection([...result[0].features, ...result[1].features, ...result[2].features]) // join pins 
+                states = result[3]
 
                 pins.features.forEach(pin => {
                     pin.properties.color = 'green';
@@ -165,9 +171,9 @@
                 });
 
                // console.log('results123:', pins, states);
-               // updateFilters(['wafflehouse', 'apple'])
+               // updateFilters(['timhorton', 'apple'])
 			   //only showing apple during the pandemic; waffle house comes back when hurricane season starts
-updateFilters(['apple'])
+updateFilters(['apple','timhorton'])
 
 			   $('#loadingModal').modal('hide'); // remove modal popup
                 map.getSource("states").setData(states)
@@ -348,12 +354,11 @@ updateFilters(['apple'])
                while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
                    coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
                }
-
+			   if(closed == 1) { var isClosedtxt = 'closed'; } else { var isClosedtxt = 'open'; }
                popup
                    .setLngLat(coordinates)
                    .setHTML(`
-                   <h1>${name}</h1>
-                   closed: ${ closed}
+                   ${name} is ${ isClosedtxt}.
                    `)
                    .addTo(map);
            });
